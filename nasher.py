@@ -81,11 +81,10 @@ for i in range(8000):
                         description = item['description']
                         item_list.append((date, description))
                 item_list.sort()
-                print(item_list)
-                text = ''
                 i = 0
                 reply_to = received_id
                 while i < len(item_list):
+                    text = ''
                     for (date, description) in item_list[i:]:
                         tmp = text + date.strftime('%m/%d') + ' ' + description + '\n'
                         if is_valid_tweet(tmp):
