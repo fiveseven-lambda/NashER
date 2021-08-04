@@ -46,12 +46,14 @@ for (rem, date, description) in nearests:
         break
 
 r = client.request('statuses/update', {'status': text})
+print('statuses/update')
 print(r.text)
 
 for i in range(8000):
     last_id = open('last_id').read().strip()
 
     response = client.request('statuses/mentions_timeline', {'since_id': last_id}).text
+    print('statuses/mentions_timeline')
     print(response)
     replies = json.loads(response)
 
@@ -67,10 +69,10 @@ for i in range(8000):
             pass
         else:
             response = client.request('friendships/lookup', {'user_id': received_from}).text
+            print('friendships/lookup')
             print(response)
             is_following = 'following' in json.loads(response)[0]['connections']
             command = received_text[exclamation + 1:].split(maxsplit = 1)[0]
-            print(command)
             if command == 'list':
                 schedule = json.loads(open('schedule').read())
                 item_list = []
@@ -93,7 +95,8 @@ for i in range(8000):
                         else:
                             break
                     response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': reply_to, 'auto_populate_reply_metadata': 'true'}).text
+                    print('statuses/update')
                     print(response)
                     reply_to = json.loads(response)['id']
     open('last_id', mode='w').write(str(last_id))
-    time.sleep(10)
+    time.sleep(15)
