@@ -45,9 +45,9 @@ for (rem, date, description) in nearests:
     else:
         break
 
-r = client.request('statuses/update', {'status': text})
-print('statuses/update')
-print(r.text)
+# r = client.request('statuses/update', {'status': text})
+# print('statuses/update')
+# print(r.text)
 
 for i in range(8000):
     last_id = open('last_id').read().strip()
@@ -72,23 +72,22 @@ for i in range(8000):
             print('friendships/lookup')
             print(response)
             is_following = 'following' in json.loads(response)[0]['connections']
-            command = received_text[exclamation + 1:].split(maxsplit = 1)[0]
-            if command == 'list':
+            command = received_text[exclamation + 1:].split()
+            if command[0] == 'list':
                 schedule = json.loads(open('schedule').read())
                 item_list = []
-                for group in schedule:
-                    for item in group:
+                for gind, group in enumerate(schedule):
+                    for iind, item in enumerate(group):
                         tmp = datetime.datetime.strptime(item['date'], '%Y/%m/%d')
                         date = datetime.date(tmp.year, tmp.month, tmp.day)
                         description = item['description']
-                        item_list.append((date, description))
-                item_list.sort()
+                        item_list.append((gind, iind, date, description))
                 i = 0
                 reply_to = received_id
                 while i < len(item_list):
                     text = ''
-                    for (date, description) in item_list[i:]:
-                        tmp = text + date.strftime('%m/%d') + ' ' + description + '\n'
+                    for (gind, iind, date, description) in item_list[i:]:
+                        tmp = text + str(gind) + '.' + str(iind) + ': ' + date.strftime('%Y/%m/%d') + ' ' + description + '\n'
                         if is_valid_tweet(tmp):
                             text = tmp
                             i += 1
@@ -98,5 +97,43 @@ for i in range(8000):
                     print('statuses/update')
                     print(response)
                     reply_to = json.loads(response)['id']
+            if command[0] == 'new':
+                if is_following:
+                    schedule = json.loads(open('schedule').read())
+                    try:
+                        date = datetime.datetime.strptime(command[1], '%Y/%m/%d')
+                        description = ''
+                        for s in command[2:]:
+                            description += s
+                        schedule.append([{'date': date.strftime('%Y/%m/%d'), 'description': description}])
+                        open('schedule', mode='w').write(json.dumps(schedule, indent = 4))
+                        text = '予定を追加しました\n日付：' + date.strftime('%Y/%m/%d') + '\n内容：' + description
+                    except ValueError:
+                        text = command[1] + 'が日付として認識できません'
+                else:
+                    text = '権限がありません'
+                response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': received_id, 'auto_populate_reply_metadata': 'true'}).text
+                print('statuses/update')
+                print(response)
+            if command[0] == 'delete':
+                if is_following:
+                    schedule = json.loads(open('schedule').read())
+                    try:
+                        index = int(command[1])
+                        deleted = schedule[index]
+                        del schedule[index]
+                        open('schedule', mode='w').write(json.dumps(schedule, indent = 4))
+                        text = '予定を削除しました：' + json.dumps(deleted)
+                    except ValueError:
+                        text = command[1] + 'が整数として認識できません'
+                    except IndexError:
+                        text = command[1] + '番目の予定が存在しません'
+                        response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': received_id, 'auto_populate_reply_metadata': 'true'}).text
+                else:
+                    text = '権限がありません'
+                response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': received_id, 'auto_populate_reply_metadata': 'true'}).text
+                print('statuses/update')
+                print(response)
+                
     open('last_id', mode='w').write(str(last_id))
     time.sleep(15)
