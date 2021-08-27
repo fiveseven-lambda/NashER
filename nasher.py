@@ -18,7 +18,7 @@ for group in schedule:
         rem = (date - datetime.date.today()).days
         if 0 <= rem and rem < nearest[0]:
             nearest = (rem, date, item['description'])
-    if nearest[0] != datetime.timedelta.max:
+    if nearest[0] != datetime.timedelta.max.days:
         nearests.append(nearest)
 
 nearests.sort()
@@ -45,15 +45,15 @@ for (rem, date, description) in nearests:
     else:
         break
 
-# r = client.request('statuses/update', {'status': text})
-# print('statuses/update')
-# print(r.text)
+r = client.request('statuses/update', {'status': text})
+print(datetime.datetime.now(), 'statuses/update')
+print(r.text)
 
-for i in range(8000):
+for i in range(5600): # 1 日 / 15 秒を下回る数
     last_id = open('last_id').read().strip()
 
     response = client.request('statuses/mentions_timeline', {'since_id': last_id}).text
-    print('statuses/mentions_timeline')
+    print(datetime.datetime.now(), 'statuses/mentions_timeline')
     print(response)
     replies = json.loads(response)
 
@@ -69,7 +69,7 @@ for i in range(8000):
             pass
         else:
             response = client.request('friendships/lookup', {'user_id': received_from}).text
-            print('friendships/lookup')
+            print(datetime.datetime.now(), 'friendships/lookup')
             print(response)
             is_following = 'following' in json.loads(response)[0]['connections']
             command = received_text[exclamation + 1:].split()
@@ -94,7 +94,7 @@ for i in range(8000):
                         else:
                             break
                     response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': reply_to, 'auto_populate_reply_metadata': 'true'}).text
-                    print('statuses/update')
+                    print(datetime.datetime.now(), 'statuses/update')
                     print(response)
                     reply_to = json.loads(response)['id']
             if command[0] == 'new':
@@ -113,7 +113,7 @@ for i in range(8000):
                 else:
                     text = '権限がありません'
                 response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': received_id, 'auto_populate_reply_metadata': 'true'}).text
-                print('statuses/update')
+                print(datetime.datetime.now(), 'statuses/update')
                 print(response)
             if command[0] == 'delete':
                 if is_following:
@@ -132,7 +132,7 @@ for i in range(8000):
                 else:
                     text = '権限がありません'
                 response = client.request('statuses/update', {'status': text, 'in_reply_to_status_id': received_id, 'auto_populate_reply_metadata': 'true'}).text
-                print('statuses/update')
+                print(datetime.datetime.now(), 'statuses/update')
                 print(response)
                 
     open('last_id', mode='w').write(str(last_id))
